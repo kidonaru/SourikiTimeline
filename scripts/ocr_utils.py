@@ -5,7 +5,11 @@ from PIL import ImageFont, ImageDraw, Image
 
 from scripts.debug_utils import debug_args
 
-ocr = PaddleOCR(use_angle_cls=False, lang='japan', show_log=False)
+# ocr = PaddleOCR(use_angle_cls=False, lang='japan', show_log=False)
+ocrs = {
+    'japan': PaddleOCR(use_angle_cls=False, lang='japan', show_log=False),
+    'en': PaddleOCR(use_angle_cls=False, lang='en', show_log=False)
+}
 
 def hex_to_rgb(hex_color):
     return tuple(int(hex_color[i:i+2], 16) for i in (1, 3, 5))
@@ -69,10 +73,12 @@ def histogram_equalization(image):
     return equalized
 
 @debug_args
-def ocr_image(image: np.ndarray, mask_rect):
+def ocr_image(image: np.ndarray, mask_rect, lang='japan'):
     image = crop_image(image, mask_rect)
     #image = histogram_equalization(image)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
+    ocr = ocrs[lang]
     result = ocr.ocr(image, cls=True)
     print(result)
 
@@ -112,3 +118,21 @@ def get_image_bar_percentage(image: np.ndarray, mask_rect, hex_color1, hex_color
     max_x = np.max(x_list)
     
     return int(max_x / w * 100)
+
+# 特定の範囲内の色の割合を取得
+@debug_args
+def get_color_fill_percentage(image: np.ndarray, mask_rect, hex_color, threshold):
+    x, y, w, h = mask_rect
+    cropped_image = image[y:y+h, x:x+w]
+
+    rgb = hex_to_rgb(hex_color)
+
+    lower_rgb = np.array(rgb) - threshold
+    upper_rgb = np.array(rgb) + threshold
+
+    lower_rgb = np.clip(lower_rgb, 0, 255)
+    upper_rgb = np.clip(upper_rgb, 0, 255)
+
+    mask = np.all((cropped_image >= lower_rgb) & (cropped_image <= upper_rgb), axis=-1)
+
+    return int(np.sum(mask) / (w * h) * 100)

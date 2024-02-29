@@ -14,7 +14,7 @@ from scripts.config_utils import AppConfig, ProjectConfig, get_timeline_columns
 from scripts.debug_timer import DebugTimer
 from scripts.debug_utils import debug_args
 from scripts.media_utils import download_video, extract_video_frame, get_video_info, resize_image
-from scripts.ocr_utils import crop_image, draw_image_line, draw_image_rect, draw_image_string, get_image_bar_percentage, get_mask_image_rect, ocr_image
+from scripts.ocr_utils import crop_image, draw_image_line, draw_image_rect, draw_image_string, get_color_fill_percentage, get_image_bar_percentage, get_mask_image_rect, ocr_image
 from scripts.platform_utils import get_folder_path
 
 app_config = AppConfig.instance()
@@ -283,6 +283,9 @@ def create_test_image(config: ProjectConfig, project_path, target_time=0):
     cost_color1 = config.mask_cost_color1
     cost_color2 = config.mask_cost_color2
     cost_color_threshold = config.mask_cost_color_threshold
+    skill_color1 = config.mask_skill_color1
+    skill_color2 = config.mask_skill_color2
+    skill_color_threshold = config.mask_skill_color_threshold
     ignore_chara_names = config.timeline_ignore_chara_names
     skill_mask_rect = config.get_skill_mask_rect()
     cost_mask_rect = config.get_cost_mask_rect()
@@ -298,10 +301,14 @@ def create_test_image(config: ProjectConfig, project_path, target_time=0):
     chara_skills = [cs for cs in chara_skills if cs.chara_name not in ignore_chara_names]
     timer.print("CharaSkill.from_tsv")
 
-    skill_texts = ocr_image(input_image, skill_mask_rect)
-    skill_text = " ".join(skill_texts)
+    fill_percentage = max(get_color_fill_percentage(input_image, skill_mask_rect, skill_color1, skill_color_threshold),
+                            get_color_fill_percentage(input_image, skill_mask_rect, skill_color2, skill_color_threshold))
+    timer.print("get_color_fill_percentage")
 
-    time_texts = ocr_image(input_image, time_mask_rect)
+    skill_texts = ocr_image(input_image, skill_mask_rect)
+    skill_text = "".join(skill_texts)
+
+    time_texts = ocr_image(input_image, time_mask_rect, 'en')
     time_text = format_time_string("".join(time_texts))
     timer.print("ocr_image")
 
@@ -327,6 +334,7 @@ def create_test_image(config: ProjectConfig, project_path, target_time=0):
     draw_image_line(output_image, (x, y), (x, y+h), '#ffffff')
 
     skill_info = f"{skill_text}: {chara_skill.chara_name} ({similarity:.2f}%)" if chara_skill is not None else "None"
+    skill_info += f"\nスキル判定色の割合: {fill_percentage:.0f}%"
 
     def rect_to_position(rect, offset):
         x, y, w, h = rect
@@ -353,6 +361,10 @@ def _timeline_generate_gr(config: ProjectConfig, project_path: str):
     cost_color1 = config.mask_cost_color1
     cost_color2 = config.mask_cost_color2
     cost_color_threshold = config.mask_cost_color_threshold
+    skill_color1 = config.mask_skill_color1
+    skill_color2 = config.mask_skill_color2
+    skill_color_threshold = config.mask_skill_color_threshold
+    skill_color_fill_percentage = config.mask_skill_color_fill_percentage
     ignore_chara_names = config.timeline_ignore_chara_names
     max_time = config.timeline_max_time
     movie_x = config.movie_x
@@ -385,20 +397,25 @@ def _timeline_generate_gr(config: ProjectConfig, project_path: str):
 
                 input_image = crop_image(frame, (movie_x, movie_y, movie_width, movie_height))
 
-                skill_texts = ocr_image(input_image, skill_mask_rect)
-                skill_text = " ".join(skill_texts)
-
-                chara_skill, similarity = CharaSkill.find_best_match(chara_skills, skill_text)
-
-                time_texts = ocr_image(input_image, time_mask_rect)
+                time_texts = ocr_image(input_image, time_mask_rect, 'en')
                 remain_time_text = format_time_string("".join(time_texts))
                 remain_time = str_to_time(remain_time_text)
                 current_time = max_time - remain_time
                 current_time_text = time_to_str(current_time)
 
+                chara_skill = None
                 cost = 0
 
                 if remain_time != 0:
+                    fill_percentage = max(get_color_fill_percentage(input_image, skill_mask_rect, skill_color1, skill_color_threshold),
+                                          get_color_fill_percentage(input_image, skill_mask_rect, skill_color2, skill_color_threshold))
+                    
+                    if fill_percentage >= skill_color_fill_percentage:
+                        skill_texts = ocr_image(input_image, skill_mask_rect)
+                        skill_text = "".join(skill_texts)
+
+                        chara_skill, similarity = CharaSkill.find_best_match(chara_skills, skill_text)
+
                     cost = get_image_bar_percentage(
                         input_image,
                         cost_mask_rect,

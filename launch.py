@@ -138,6 +138,13 @@ with gr.Blocks(title="総力戦タイムラインメーカー", js=js) as demo:
                                     mask_cost_color1_textbox = gr.ColorPicker(value=config.mask_cost_color1, label="基準色", info="コストバー判定に使用する基準色 デフォルト(0, 180, 250)")
                                     mask_cost_color2_textbox = gr.ColorPicker(value=config.mask_cost_color2, label="エフェクト色", info="コストバー判定に使用するエフェクト色 デフォルト(255, 255, 255)")
                                     mask_cost_color_threshold_slider = gr.Number(value=config.mask_cost_color_threshold, label="色の誤差許容値", info="デフォルト20")
+                            with gr.Accordion("スキル判定設定", open=False):
+                                with gr.Row():
+                                    mask_skill_color1_textbox = gr.ColorPicker(value=config.mask_skill_color1, label="スキル判定色1", info="スキル判定に使用する色 デフォルト(255, 255, 255)")
+                                    mask_skill_color2_textbox = gr.ColorPicker(value=config.mask_skill_color2, label="スキル判定色2", info="スキル判定に使用する色 デフォルト(100, 100, 100)")
+                                with gr.Row():
+                                    mask_skill_color_threshold_slider = gr.Number(value=config.mask_skill_color_threshold, label="色の誤差許容値", info="デフォルト20")
+                                    mask_skill_color_fill_percentage_slider = gr.Number(value=config.mask_skill_color_fill_percentage, label="判定色の割合(%)", info="マスク範囲内の判定色が、この割合よりも多い場合にスキル判定を行う デフォルト30(%)")
                             mask_image_w_slider = gr.Number(value=config.mask_image_w, label="Width", visible=False)
                             mask_image_h_slider = gr.Number(value=config.mask_image_h, label="Height", visible=False)
 
@@ -166,7 +173,7 @@ with gr.Blocks(title="総力戦タイムラインメーカー", js=js) as demo:
                             with gr.Row():
                                 timeline_visible_columns_checkbox = gr.CheckboxGroup(label="表示カラム", choices=get_timeline_columns(), value=app_config.timeline_visible_columns)
                             with gr.Row():
-                                timeline_cost_omit_seconds_slider = gr.Slider(value=app_config.timeline_cost_omit_seconds, label="コストを省略する秒数", info="前回のスキルを発動してからの経過時間が指定秒数以下の場合、コストの表示は省略されます", minimum=0, maximum=10, step=0.1)
+                                timeline_cost_omit_seconds_slider = gr.Slider(value=app_config.timeline_cost_omit_seconds, label="コストを省略する秒数", info="前回のスキルを発動してからの経過時間が指定秒数以下の場合、コストを省略する", minimum=0, maximum=10, step=0.1)
                             with gr.Row():
                                 timeline_newline_chara_names_dropdown = gr.Dropdown(chara_names, value=app_config.timeline_newline_chara_names, multiselect=True, label="改行するキャラ名一覧", info="指定したキャラがスキル発動後、改行する")
                             with gr.Row():
@@ -265,6 +272,11 @@ with gr.Blocks(title="総力戦タイムラインメーカー", js=js) as demo:
         mask_cost_color1_textbox,
         mask_cost_color2_textbox,
         mask_cost_color_threshold_slider,
+
+        mask_skill_color1_textbox,
+        mask_skill_color2_textbox,
+        mask_skill_color_threshold_slider,
+        mask_skill_color_fill_percentage_slider,
 
         timeline_ignore_chara_names_dropdown,
         timeline_max_time_number,

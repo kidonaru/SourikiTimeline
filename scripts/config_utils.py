@@ -215,6 +215,11 @@ class ProjectConfig(JsonConfig):
     mask_cost_color2: str = '#ffffff'
     mask_cost_color_threshold: int = 20
 
+    mask_skill_color1: str = '#ffffff'
+    mask_skill_color2: str = '#646464'
+    mask_skill_color_threshold: int = 20
+    mask_skill_color_fill_percentage: int = 30
+
     timeline_ignore_chara_names: list[str] = field(default_factory=lambda: [])
     timeline_max_time: int = 240
 

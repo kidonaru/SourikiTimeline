@@ -33,6 +33,9 @@ class CharaSkill:
     
     @classmethod
     def find_best_match(cls, chara_skills: List['CharaSkill'], query_skill: str, threshold: int = 50):
+        if query_skill == '':
+            return None, 0
+
         best_match = None
         highest_similarity = 0
         query_skill = convert_ocr_string(query_skill)
