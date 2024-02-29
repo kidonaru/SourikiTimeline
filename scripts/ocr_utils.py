@@ -5,7 +5,7 @@ from PIL import ImageFont, ImageDraw, Image
 
 from scripts.debug_utils import debug_args
 
-ocr = PaddleOCR(use_angle_cls=True, use_gpu=True, lang='japan', show_log=False)
+ocr = PaddleOCR(use_angle_cls=True, lang='japan', show_log=False)
 
 def hex_to_rgb(hex_color):
     return tuple(int(hex_color[i:i+2], 16) for i in (1, 3, 5))
