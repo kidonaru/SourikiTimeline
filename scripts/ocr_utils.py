@@ -74,7 +74,8 @@ def histogram_equalization(image):
 
 @debug_args
 def ocr_image(image: np.ndarray, mask_rect, lang='japan'):
-    image = crop_image(image, mask_rect)
+    if mask_rect is not None:
+        image = crop_image(image, mask_rect)
     #image = histogram_equalization(image)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
