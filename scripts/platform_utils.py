@@ -160,3 +160,13 @@ def get_video_path(initialdir):
     video_file = video_file.replace("¥", os.path.sep).replace("\\", os.path.sep).replace("/", os.path.sep)
     return video_file
 
+def open_path_in_explorer(path):
+    path = os.path.normpath(path)
+
+    if os.name == 'nt':  # Windows
+        os.startfile(path)
+    elif os.name == 'posix':
+        if platform.system() == 'Darwin':  # macOS
+            os.system(f'open "{path}"')
+        else:  # Linux and other Unix-like systems
+            os.system(f'xdg-open "{path}"')

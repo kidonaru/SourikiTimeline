@@ -124,7 +124,10 @@ class AppConfig(JsonConfig):
     timeline_tsv_separator: str = ' '
     timeline_visible_columns: list[str] = field(default_factory=lambda: ["発動時コスト", "短縮キャラ名"])
     timeline_cost_omit_seconds: float = 3.0
+    timeline_remain_cost_omit_value: float = 1.0
     timeline_newline_chara_names: list[str] = field(default_factory=lambda: [])
+    timeline_newline_before_chara: bool = False
+    timeline_newline_after_chara: bool = True
 
     _instance = None # Singleton instance
 
@@ -297,8 +300,11 @@ class ProjectConfig(JsonConfig):
 
     def convert_timeline(self, dataframe: pd.DataFrame):
         newline_chara_names = app_config.timeline_newline_chara_names
+        newline_before_chara = app_config.timeline_newline_before_chara
+        newline_after_chara = app_config.timeline_newline_after_chara
         columns = app_config.timeline_visible_columns
         cost_omit_seconds = app_config.timeline_cost_omit_seconds
+        remain_cost_omit_value = app_config.timeline_remain_cost_omit_value
 
         if dataframe is None:
             return None
@@ -318,7 +324,13 @@ class ProjectConfig(JsonConfig):
 
             invoke_cost = row["発動時コスト"]
             remain_cost = row["残コスト"]
+
             if elapsed_time > 0 and cost_omit_seconds > 0 and elapsed_time < cost_omit_seconds + 0.01:
+                invoke_cost = ""
+                remain_cost = ""
+
+            remain_cost_value = float(remain_cost) if remain_cost else 0
+            if remain_cost_omit_value > 0 and remain_cost_value < remain_cost_omit_value + 0.01:
                 invoke_cost = ""
                 remain_cost = ""
 
@@ -331,9 +343,12 @@ class ProjectConfig(JsonConfig):
                 else:
                     new_row.append(row[column])
 
+            if newline_before_chara and row["キャラ名"] in newline_chara_names:
+                new_rows.append([])
+
             new_rows.append(new_row)
 
-            if row["キャラ名"] in newline_chara_names:
+            if newline_after_chara and row["キャラ名"] in newline_chara_names:
                 new_rows.append([])
 
             prev_skill_time = time

@@ -71,6 +71,23 @@ def load_timeline(project_path: str):
 
     return pd.read_csv(tsv_path, sep='\t', dtype=str)
 
+def save_memo(project_path: str, memo: str):
+    memo_path = os.path.join(project_path, "memo.txt")
+    with open(memo_path, "w", encoding="utf-8") as f:
+        f.write(memo)
+
+    return memo_path
+
+def load_memo(project_path: str):
+    memo_path = os.path.join(project_path, "memo.txt")
+    if not os.path.exists(memo_path):
+        return ""
+
+    with open(memo_path, "r", encoding="utf-8") as f:
+        memo = f.read()
+
+    return memo
+
 def levenshtein_distance(s1, s2):
     if len(s1) < len(s2):
         return levenshtein_distance(s2, s1)

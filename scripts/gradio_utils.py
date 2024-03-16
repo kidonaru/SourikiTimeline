@@ -10,7 +10,7 @@ import ctypes
 from moviepy.editor import VideoFileClip
 
 from scripts.chara_skill import CharaSkill
-from scripts.common_utils import convert_safe_filename, load_timeline, save_image, save_timeline, str_to_time, time_to_str
+from scripts.common_utils import convert_safe_filename, load_memo, load_timeline, save_image, save_memo, save_timeline, str_to_time, time_to_str
 from scripts.config_utils import AppConfig, ProjectConfig, get_timeline_columns
 from scripts.debug_timer import DebugTimer
 from scripts.debug_utils import debug_args
@@ -61,6 +61,8 @@ def select_project_gr(evt: gr.SelectData):
     source_dataframe = load_timeline(project_path)
     dataframe, dataframe_tsv = config.convert_timeline_and_tsv(source_dataframe)
 
+    memo = load_memo(project_path)
+
     output_log = f"プロジェクトをロードしました。\n\n{project_path}\n\n"
 
     return [
@@ -69,6 +71,7 @@ def select_project_gr(evt: gr.SelectData):
         app_config.get_current_preimage(),
         dataframe,
         dataframe_tsv,
+        memo,
         *asdict(config).values(),
         *([None] * 13),
     ]
@@ -122,6 +125,7 @@ def create_project_gr(url: str):
         output_log,
         project_path,
         app_config.get_current_preimage(),
+        None,
         None,
         None,
         *asdict(config).values(),
@@ -609,3 +613,12 @@ def save_mask_gr(new_mask_image_name):
     config, output_log, mask_image_name, mask_result = _save_mask_gr(config, project_path, new_mask_image_name)
 
     return [output_log, mask_image_name, *mask_result]
+
+@debug_args
+def save_memo_gr(memo: str):
+    project_path = app_config.project_path
+    save_memo(project_path, memo)
+
+    output_log = "メモを保存しました。\n\n"
+
+    return output_log

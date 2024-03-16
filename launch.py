@@ -3,9 +3,10 @@ import gradio as gr
 from gradio_modal import Modal
 
 from scripts.chara_skill import CharaSkill
-from scripts.common_utils import load_timeline
+from scripts.common_utils import load_timeline, load_memo
 from scripts.config_utils import AppConfig, ProjectConfig, get_timeline_columns
-from scripts.gradio_utils import download_video_gr, mask_preview_gr, save_mask_gr, timeline_generate_gr, create_project_gr, reload_workspace_gr, select_project_gr, select_workspace_gr, timeline_update_gr, load_mask_gr
+from scripts.gradio_utils import download_video_gr, mask_preview_gr, save_mask_gr, save_memo_gr, timeline_generate_gr, create_project_gr, reload_workspace_gr, select_project_gr, select_workspace_gr, timeline_update_gr, load_mask_gr
+from scripts.platform_utils import open_path_in_explorer
 
 movie_downloaders = ["pytube", "yt-dlp"]
 download_formats = ["mp4", "webm"]
@@ -18,6 +19,8 @@ config = ProjectConfig.load(app_config.project_path)
 
 source_dataframe = load_timeline(app_config.project_path)
 dataframe, dataframe_tsv = config.convert_timeline_and_tsv(source_dataframe)
+
+source_memo = load_memo(app_config.project_path)
 
 def get_mask_image_names():
     return [f for f in os.listdir(os.path.join("resources", "mask")) if f.endswith(".png")]
@@ -41,11 +44,10 @@ with gr.Blocks(title="総力戦タイムラインメーカー", js=js) as demo:
     with gr.Row():
         with gr.Column(scale=1, min_width=150):
             project_image = gr.Image(show_label=False, value=app_config.get_current_preimage(), width=150)
-        with gr.Column(scale=3):
-            with gr.Row():
-                project_path_textbox = gr.Textbox(label="動画保存フォルダ", value=app_config.project_path, visible=False)
-                title_textbox = gr.Textbox(label="タイトル", value=config.title, interactive=False)
-
+        with gr.Column(scale=2.5):
+            title_textbox = gr.Textbox(label="タイトル", value=config.title, interactive=False)
+        with gr.Column(scale=0.5, min_width=50):
+            open_project_button = gr.Button("開く", variant="secondary", size="sm")
         with gr.Column(scale=3):
             base_output = gr.Markdown(show_label=False)
 
@@ -72,6 +74,7 @@ with gr.Blocks(title="総力戦タイムラインメーカー", js=js) as demo:
 
                     movie_url_textbox = gr.Textbox(label="Youtube URL", value=config.movie_url, interactive=False)
                     artist_textbox = gr.Textbox(label="投稿者", value=config.author, interactive=False)
+                    project_path_textbox = gr.Textbox(label="動画保存フォルダ", value=app_config.project_path, visible=False)
 
         with gr.TabItem("ダウンロード"):
             with gr.Row():
@@ -175,7 +178,12 @@ with gr.Blocks(title="総力戦タイムラインメーカー", js=js) as demo:
                             with gr.Row():
                                 timeline_cost_omit_seconds_slider = gr.Slider(value=app_config.timeline_cost_omit_seconds, label="コストを省略する秒数", info="前回のスキルを発動してからの経過時間が指定秒数以下の場合、コストを省略する", minimum=0, maximum=10, step=0.1)
                             with gr.Row():
-                                timeline_newline_chara_names_dropdown = gr.Dropdown(chara_names, value=app_config.timeline_newline_chara_names, multiselect=True, label="改行するキャラ名一覧", info="指定したキャラがスキル発動後、改行する")
+                                timeline_remain_cost_omit_value_slider = gr.Slider(value=app_config.timeline_remain_cost_omit_value, label="コストを省略する残コスト", info="残コストが指定値以下の場合、コストを省略する", minimum=0, maximum=10, step=0.1)
+                            with gr.Row():
+                                timeline_newline_chara_names_dropdown = gr.Dropdown(chara_names, value=app_config.timeline_newline_chara_names, multiselect=True, label="スキル発動時に改行するキャラ名一覧")
+                            with gr.Row():
+                                timeline_newline_before_chara = gr.Checkbox(value=app_config.timeline_newline_before_chara, label="発動キャラの前で改行する")
+                                timeline_newline_after_chara = gr.Checkbox(value=app_config.timeline_newline_after_chara, label="発動キャラの後で改行する")
                             with gr.Row():
                                 timeline_tsv_separator_dropdown = gr.Dropdown(choices=tsv_separators, value=app_config.timeline_tsv_separator, label="TSVの区切り文字")
 
@@ -185,6 +193,9 @@ with gr.Blocks(title="総力戦タイムラインメーカー", js=js) as demo:
                             timeline_dataframe = gr.Dataframe(dataframe, interactive=False)
                         with gr.TabItem("TSV"):
                             timeline_dataframe_tsv = gr.Textbox(dataframe_tsv, show_label=False, interactive=False, lines=20)
+                        with gr.TabItem("Memo"):
+                            timeline_memo_textbox = gr.Textbox(source_memo, label="整形後のTLの保存などで使用できます", lines=20, interactive=True)
+                            timeline_save_memo_button = gr.Button("保存", variant="primary")
 
     # プロジェクト作成モーダル
     with Modal(visible=False) as create_project_modal:
@@ -230,7 +241,10 @@ with gr.Blocks(title="総力戦タイムラインメーカー", js=js) as demo:
         timeline_tsv_separator_dropdown,
         timeline_visible_columns_checkbox,
         timeline_cost_omit_seconds_slider,
+        timeline_remain_cost_omit_value_slider,
         timeline_newline_chara_names_dropdown,
+        timeline_newline_before_chara,
+        timeline_newline_after_chara,
     ]
 
     inputs = [
@@ -312,6 +326,15 @@ with gr.Blocks(title="総力戦タイムラインメーカー", js=js) as demo:
                                      outputs=create_project_modal
                                 )
 
+    def open_project():
+        prohect_path = app_config.project_path
+        open_path_in_explorer(prohect_path)
+
+    open_project_button.click(open_project,
+                                inputs=None,
+                                outputs=None
+                            )
+
     def show_load_mask_modal():
         modal = Modal(visible=True)
         dropdown = gr.update(choices=get_mask_image_names())
@@ -358,6 +381,7 @@ with gr.Blocks(title="総力戦タイムラインメーカー", js=js) as demo:
                                     project_image,
                                     timeline_dataframe,
                                     timeline_dataframe_tsv,
+                                    timeline_memo_textbox,
                                     *inputs,
                                     *outputs,
                              ])
@@ -372,6 +396,7 @@ with gr.Blocks(title="総力戦タイムラインメーカー", js=js) as demo:
                                         project_image,
                                         timeline_dataframe,
                                         timeline_dataframe_tsv,
+                                        timeline_memo_textbox,
                                         *inputs,
                                         *outputs,
                                   ])
@@ -452,6 +477,12 @@ with gr.Blocks(title="総力戦タイムラインメーカー", js=js) as demo:
                                 timeline_dataframe,
                                 timeline_dataframe_tsv,
                           ])
+
+    timeline_save_memo_button.click(save_memo_gr,
+                            inputs=[
+                                    timeline_memo_textbox,
+                            ],
+                            outputs=base_output)
 
 if __name__ == "__main__":
     demo.launch(inbrowser=True)
