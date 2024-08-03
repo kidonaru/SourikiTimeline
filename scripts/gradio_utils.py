@@ -445,7 +445,7 @@ def _timeline_generate_gr(config: ProjectConfig, project_path: str):
                 else:
                     is_executing_skill = False
 
-                time_image = crop_image(frame, time_mask_rect)
+                time_image = crop_image(input_image, time_mask_rect)
 
                 cost = get_image_bar_percentage(
                         input_image,
