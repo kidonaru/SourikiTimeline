@@ -24,10 +24,10 @@ class CharaSkill:
             header = next(file).strip().split('\t')
             for line in file:
                 parts = line.strip().split('\t')
-                if len(parts) >= 3:
+                if len(parts) >= 2:
                     chara_name = parts[header.index('キャラ')]
                     skill_name = parts[header.index('EXスキル名')]
-                    skill_detail = parts[header.index('EXスキル詳細')]
+                    skill_detail = parts[header.index('EXスキル詳細')] if len(parts) > 2 else ''
                     chara_skills.append(cls(chara_name, skill_name, skill_detail))
         return chara_skills
     
