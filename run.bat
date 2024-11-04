@@ -12,6 +12,8 @@ IF NOT "%local_version%"=="%current_version%" (
 
 call venv\Scripts\activate.bat
 
+pip freeze
+
 python launch.py
 
 deactivate

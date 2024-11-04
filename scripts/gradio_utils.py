@@ -272,7 +272,7 @@ def format_time_string(time_str: str):
 
 @debug_args
 def load_preview_image(config: ProjectConfig, project_path, target_time):
-    input_name = config.movie_download_file_name
+    input_name = config.get_fixed_download_file_name()
     input_path = os.path.join(project_path, input_name)
     movie_x = config.movie_x
     movie_y = config.movie_y
@@ -359,7 +359,7 @@ def create_test_image(config: ProjectConfig, project_path, target_time=0):
 
 @debug_args
 def _timeline_generate_gr(config: ProjectConfig, project_path: str):
-    input_name = config.movie_download_file_name
+    input_name = config.get_fixed_download_file_name()
     input_path = os.path.join(project_path, input_name)
     start_time = config.movie_start_time
     end_time = config.movie_end_time

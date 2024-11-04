@@ -9,7 +9,7 @@ source ./venv/bin/activate
 
 pip3 install --upgrade -r requirements-osx.txt
 
-pip3 list
+pip freeze
 
 cat VERSION > .local_version
 

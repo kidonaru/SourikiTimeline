@@ -5,7 +5,7 @@ import urllib.parse
 from moviepy.video.fx.crop import crop
 from moviepy.editor import VideoFileClip
 from moviepy.config import get_setting
-from pytube import YouTube
+from pytubefix import YouTube
 from PIL import Image
 from yt_dlp import YoutubeDL
 
