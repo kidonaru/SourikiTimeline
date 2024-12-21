@@ -2,9 +2,8 @@ import os
 import shutil
 import subprocess
 import urllib.parse
-from moviepy.video.fx.crop import crop
-from moviepy.editor import VideoFileClip
-from moviepy.config import get_setting
+from moviepy import VideoFileClip
+from moviepy.config import FFMPEG_BINARY
 from pytubefix import YouTube
 from PIL import Image
 from yt_dlp import YoutubeDL
@@ -111,7 +110,7 @@ def ydl_download(url, output_path, format):
     option = {
         'outtmpl': output_path,
         'format': format,
-        'ffmpeg_location': get_setting("FFMPEG_BINARY"),
+        'ffmpeg_location': FFMPEG_BINARY,
     }
     with YoutubeDL(option) as ydl:
         result = ydl.download([url])
@@ -189,12 +188,7 @@ def trim_and_crop_video(input_path, output_path, start_time, end_time, width, he
             width = width if width > 0 else video.w
             height = height if height > 0 else video.h
             print(f"clipping {video.w}x{video.h} -> {width}x{height}")
-            video = crop(
-                video,
-                x_center=video.w/2,
-                y_center=video.h/2,
-                width=width,
-                height=height)
+            video = video.cropped(x_center=video.w/2, y_center=video.h/2, width=width, height=height)
         tmp_file = get_tmp_file_path(".m4a")
         video.write_videofile(output_path, temp_audiofile=tmp_file, codec="libx264", audio_codec="aac", audio_bitrate=bitrate)
         video.close()
@@ -204,7 +198,7 @@ def trim_and_crop_video(input_path, output_path, start_time, end_time, width, he
 
 @debug_args
 def get_audio_volume(audio_file):
-    ffmpeg = get_setting("FFMPEG_BINARY")
+    ffmpeg = FFMPEG_BINARY
     null_device = '/dev/null' if os.name == 'posix' else 'NUL'
     cmd = [ffmpeg, '-i', audio_file, '-af', 'volumedetect', '-f', 'null', null_device]
     print(" ".join(cmd))
@@ -229,7 +223,7 @@ def normalize_audio(audio_file, target_dBFS, bitrate):
 
     change_in_dBFS = target_dBFS - source_dBFS
 
-    ffmpeg = get_setting("FFMPEG_BINARY")
+    ffmpeg = FFMPEG_BINARY
     cmd = [ffmpeg, '-y', '-i', tmp_input_file, '-af', f'volume={change_in_dBFS}dB', '-ab', bitrate, tmp_output_file]
     print(" ".join(cmd))
 
@@ -260,7 +254,7 @@ def convert_audio(input_file, output_file, bitrate=None, remove_original=True):
     else:
         shutil.copy(input_file, tmp_input_file)
 
-    ffmpeg = get_setting("FFMPEG_BINARY")
+    ffmpeg = FFMPEG_BINARY
     cmd = [ffmpeg, '-y', '-i', tmp_input_file]
 
     if bitrate is not None:
@@ -288,7 +282,7 @@ def merge_video_and_audio(input_video_file, input_audio_file, output_file, remov
     shutil.copy(input_video_file, tmp_input_video_file)
     shutil.copy(input_audio_file, tmp_input_audio_file)
 
-    ffmpeg = get_setting("FFMPEG_BINARY")
+    ffmpeg = FFMPEG_BINARY
     cmd = [ffmpeg, '-y', '-i', tmp_input_video_file, '-i', tmp_input_audio_file, '-c:v', 'copy', '-c:a', 'copy', '-map', '0:v:0', '-map', '1:a:0', tmp_output_file]
 
     print(" ".join(cmd))

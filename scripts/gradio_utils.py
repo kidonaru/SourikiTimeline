@@ -7,7 +7,7 @@ import pandas as pd
 import pyperclip
 import requests
 import ctypes
-from moviepy.editor import VideoFileClip
+from moviepy import VideoFileClip
 
 from scripts.chara_skill import CharaSkill
 from scripts.common_utils import convert_safe_filename, load_memo, load_timeline, save_image, save_memo, save_timeline, str_to_time, time_to_str
@@ -423,7 +423,7 @@ def _timeline_generate_gr(config: ProjectConfig, project_path: str):
     with VideoFileClip(input_path) as clip:
         end_time = clip.duration if end_time == 0 else end_time
         end_time_text = time_to_str(end_time)
-        with clip.subclip(start_time, end_time).set_fps(frame_rate) as subclip:
+        with clip.subclipped(start_time, end_time).with_fps(frame_rate) as subclip:
             for frame_id, frame in enumerate(subclip.iter_frames()):
                 movie_time = start_time + (frame_id / frame_rate)
                 movie_time_text = time_to_str(movie_time)
