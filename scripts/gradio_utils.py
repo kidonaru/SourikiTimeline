@@ -85,7 +85,7 @@ def create_project_gr(url: str):
         config = ProjectConfig.load(app_config.project_path)
         return ["URLが入力されていません。", "", None, *asdict(config).values()]
 
-    title, author, thumbnail_url = get_video_info(url)
+    title, author, thumbnail_url = get_video_info(url, app_config.downloader)
 
     new_score_name = convert_safe_filename(f"{author} - {title}")
 

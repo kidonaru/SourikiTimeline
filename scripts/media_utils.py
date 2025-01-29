@@ -42,12 +42,28 @@ def resize_image(input_image_path, output_image_path, size):
     new_image.save(output_image_path, quality = 85)
 
 @debug_args
-def get_video_info(url):
-    yt = YouTube(url)
+def get_video_info(url, downloader):
+    if downloader == "pytube":
+        yt = YouTube(url)
 
-    title = yt.title
-    author = yt.author
-    thumbnail_url = yt.thumbnail_url
+        title = yt.title
+        author = yt.author
+        thumbnail_url = yt.thumbnail_url
+
+    elif downloader == "yt-dlp":
+        option = {
+            'quiet': True,
+            'no_warnings': True,
+            'extract_flat': True,
+        }
+        with YoutubeDL(option) as ydl:
+            info = ydl.extract_info(url, download=False)
+
+            title = info.get('title', '')
+            author = info.get('uploader', '')
+            thumbnail_url = info.get('thumbnail', '')
+    else:
+        raise Exception(f"サポートされていないダウンローダーです。 downloader: {downloader}")
 
     return title, author, thumbnail_url
 
