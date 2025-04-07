@@ -198,7 +198,8 @@ with gr.Blocks(title="総力戦タイムラインメーカー", js=js) as demo:
                             timeline_save_memo_button = gr.Button("保存", variant="primary")
 
     # プロジェクト作成モーダル
-    with Modal(visible=False) as create_project_modal:
+    create_project_modal = Modal("プロジェクト作成", visible=False)
+    with create_project_modal:
         with gr.Row():
             with gr.Column(scale=1.5):
                 create_project_url_textbox = gr.Textbox(label="タイムライン出力する動画のURL", value="", info="タイムラインの出力をしたいYouTubeのURLを入力してください")
@@ -207,7 +208,8 @@ with gr.Blocks(title="総力戦タイムラインメーカー", js=js) as demo:
                 create_project_output = gr.Markdown(show_label=False)
 
     # マスクのロードモーダル
-    with Modal(visible=False) as load_mask_modal:
+    load_mask_modal = Modal("マスクのロード", visible=False)
+    with load_mask_modal:
         with gr.Row():
             with gr.Column(scale=1.5):
                 mask_image_name_dropdown = gr.Dropdown(get_mask_image_names(), value=config.mask_image_name, label="マスク画像名", info="OCRで読み取るマスク範囲を選択します。resources\maskに格納されている画像を使用できます")
@@ -217,7 +219,8 @@ with gr.Blocks(title="総力戦タイムラインメーカー", js=js) as demo:
         add_space(10)
 
     # マスクの保存モーダル
-    with Modal(visible=False) as save_mask_modal:
+    save_mask_modal = Modal("マスクの保存", visible=False)
+    with save_mask_modal:
         with gr.Row():
             with gr.Column(scale=1.5):
                 save_mask_image_name_text = gr.Textbox(label="マスク画像名", info="保存するファイル名を入力してください。resources\maskに保存されます")
@@ -226,7 +229,8 @@ with gr.Blocks(title="総力戦タイムラインメーカー", js=js) as demo:
                 save_mask_output = gr.Markdown(show_label=False)
 
     # 画像確認モーダル
-    with Modal(visible=False) as confirm_image_modal:
+    confirm_image_modal = Modal("画像確認", visible=False)
+    with confirm_image_modal:
         confirm_image = gr.Image(show_label=False)
 
     app_config_inputs = [
@@ -321,10 +325,11 @@ with gr.Blocks(title="総力戦タイムラインメーカー", js=js) as demo:
         mask_time_h_slider,
     ]
 
-    show_create_project_button.click(lambda: Modal(visible=True),
-                                     inputs=None,
-                                     outputs=create_project_modal
-                                )
+    show_create_project_button.click(
+        fn=lambda: gr.update(visible=True),
+        inputs=None,
+        outputs=create_project_modal
+    )
 
     def open_project():
         prohect_path = app_config.project_path
@@ -335,36 +340,23 @@ with gr.Blocks(title="総力戦タイムラインメーカー", js=js) as demo:
                                 outputs=None
                             )
 
-    def show_load_mask_modal():
-        modal = Modal(visible=True)
-        dropdown = gr.update(choices=get_mask_image_names())
+    show_load_mask_button.click(
+        fn=lambda: [gr.update(visible=True), gr.update(choices=get_mask_image_names())],
+        inputs=None,
+        outputs=[load_mask_modal, mask_image_name_dropdown]
+    )
 
-        return [modal, dropdown]
+    show_save_mask_button.click(
+        fn=lambda: gr.update(visible=True),
+        inputs=None,
+        outputs=save_mask_modal
+    )
 
-    show_load_mask_button.click(show_load_mask_modal,
-                                inputs=None,
-                                outputs=[
-                                    load_mask_modal,
-                                    mask_image_name_dropdown
-                                ]
-                            )
-
-    show_save_mask_button.click(lambda: Modal(visible=True),
-                                inputs=None,
-                                outputs=save_mask_modal
-                            )
-
-    def show_confirm_image_modal(image):
-        modal = Modal(visible=True)
-        return [modal, image]
-
-    movie_preview_image.select(show_confirm_image_modal,
-                                inputs=movie_preview_image,
-                                outputs=[
-                                    confirm_image_modal,
-                                    confirm_image
-                                ]
-                            )
+    movie_preview_image.select(
+        fn=lambda image: [gr.update(visible=True), image],
+        inputs=movie_preview_image,
+        outputs=[confirm_image_modal, confirm_image]
+    )
 
     workspace_open_button.click(select_workspace_gr,
                                   inputs=[],
@@ -485,4 +477,7 @@ with gr.Blocks(title="総力戦タイムラインメーカー", js=js) as demo:
                             outputs=base_output)
 
 if __name__ == "__main__":
-    demo.launch(inbrowser=True)
+    demo.launch(
+        inbrowser=True,
+        allowed_paths=[app_config.workspace_path],
+    )

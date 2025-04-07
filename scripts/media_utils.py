@@ -94,7 +94,7 @@ def download_youtube_with_pytube(url, output_path):
     tmp_dir = get_tmp_dir()
     
     yt = YouTube(url)
-    format_list = yt.streams.all()
+    format_list = yt.streams
     for format in format_list:
         print(format)
 

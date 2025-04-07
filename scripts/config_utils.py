@@ -131,6 +131,12 @@ class AppConfig(JsonConfig):
 
     _instance = None # Singleton instance
 
+    def __post_init__(self):
+        valid_columns = get_timeline_columns()
+        self.timeline_visible_columns = [col for col in self.timeline_visible_columns if col in valid_columns]
+        if not self.timeline_visible_columns:
+            self.timeline_visible_columns = ["発動時コスト", "短縮キャラ名"]
+
     @classmethod
     def instance(cls):
         if cls._instance is None:
@@ -344,12 +350,12 @@ class ProjectConfig(JsonConfig):
                     new_row.append(row[column])
 
             if newline_before_chara and row["キャラ名"] in newline_chara_names:
-                new_rows.append([])
+                new_rows.append(["" for _ in columns])
 
             new_rows.append(new_row)
 
             if newline_after_chara and row["キャラ名"] in newline_chara_names:
-                new_rows.append([])
+                new_rows.append(["" for _ in columns])
 
             prev_skill_time = time
 

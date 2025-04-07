@@ -7,8 +7,8 @@ from scripts.debug_utils import debug_args
 
 # ocr = PaddleOCR(use_angle_cls=False, lang='japan', show_log=False)
 ocrs = {
-    'japan': PaddleOCR(use_angle_cls=False, lang='japan', show_log=False),
-    'en': PaddleOCR(use_angle_cls=False, lang='en', show_log=False)
+    'japan': PaddleOCR(use_angle_cls=False, lang='japan', show_log=False, enable_mkldnn=False),
+    'en': PaddleOCR(use_angle_cls=False, lang='en', show_log=False, enable_mkldnn=False)
 }
 
 def hex_to_rgb(hex_color):
@@ -80,7 +80,7 @@ def ocr_image(image: np.ndarray, mask_rect, lang='japan'):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     ocr = ocrs[lang]
-    result = ocr.ocr(image, cls=True)
+    result = ocr.ocr(image, cls=False)
     print(result)
 
     if not result[0]:
