@@ -7,8 +7,8 @@ from scripts.debug_utils import debug_args
 
 # ocr = PaddleOCR(use_angle_cls=False, lang='japan', show_log=False)
 ocrs = {
-    'japan': PaddleOCR(use_angle_cls=False, lang='japan', show_log=False, enable_mkldnn=False, use_gpu=False),
-    'en': PaddleOCR(use_angle_cls=False, lang='en', show_log=False, enable_mkldnn=False, use_gpu=False)
+    'japan': PaddleOCR(use_angle_cls=False, lang='japan', show_log=False),
+    'en': PaddleOCR(use_angle_cls=False, lang='en', show_log=False)
 }
 
 def hex_to_rgb(hex_color):
